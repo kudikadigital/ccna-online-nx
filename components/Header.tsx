@@ -12,7 +12,7 @@ export default function Navbar({ onOpenModal }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 w-full z-50 p-4 md:p-6 pointer-events-none">
+    <nav className="fixed top-0 w-full z-50 p-4 pointer-events-none">
       <div className="container mx-auto max-w-7xl flex justify-between items-center bg-slate-950/80 backdrop-blur-xl border border-slate-800/50 p-3 md:p-4 rounded-3xl shadow-2xl shadow-black/40 pointer-events-auto">
         
         {/* Logo Baseada no Header Oficial */}
