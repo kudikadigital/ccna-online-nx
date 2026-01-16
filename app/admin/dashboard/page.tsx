@@ -1,3 +1,4 @@
+import { DeleteLeadButton } from "@/components/DeleteLeadButton";
 import LogoutBtn from "@/components/ui/Logout";
 import { prisma } from "@/lib/prisma";
 import { 
@@ -6,7 +7,6 @@ import {
   TrendingUp, 
   Wallet,
   ExternalLink,
-  Trash2,
   ShieldCheck
 } from "lucide-react";
 
@@ -126,9 +126,7 @@ export default async function AdminDashboard() {
                         <a href={`https://wa.me/${lead.whatsapp}`} target="_blank" className="p-2 bg-slate-800 rounded-lg hover:bg-green-600 text-white transition-all">
                           <ExternalLink size={14} />
                         </a>
-                        <button className="p-2 bg-slate-800 rounded-lg hover:bg-red-600 text-white transition-all">
-                          <Trash2 size={14} />
-                        </button>
+                        <DeleteLeadButton id={String(lead.id)} />
                       </div>
                     </td>
                   </tr>
