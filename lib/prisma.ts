@@ -1,41 +1,53 @@
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "./generated/prisma";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import bcrypt from "bcrypt";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const adapter = new PrismaBetterSqlite3({
-  url: "file:./prisma/dev.db"
-})
+const setupPrisma = () => {
+  const url = process.env.DATABASE_URL || "file:./dev.db";
+  
+  // LÓGICA PARA PRODUÇÃO (TURSO)
+  if (url.startsWith("libsql://") || url.startsWith("wss://")) {
+    const config = {
+      url: process.env.DATABASE_URL!,
+      authToken: process.env.DATABASE_AUTH_TOKEN,
+    };
 
+    // No Prisma 7, se o construtor pede Config, 
+    // instanciamos o adaptador passando o objeto de configuração diretamente.
+    const adapter = new PrismaLibSql(config); 
+    return new PrismaClient({ adapter: adapter as any });
+  }
 
-// Deixe o construtor vazio. O Prisma 6+ lerá o prisma.config.ts automaticamente
-export const prisma =
-  globalForPrisma.prisma || new PrismaClient({adapter});
+  // LÓGICA PARA DESENVOLVIMENTO (SQLITE)
+  // Nota: Para o Prisma 7, não precisamos de passar adaptador para SQLite local
+  // Ele usa o motor nativo ultra-rápido.
+  return new PrismaClient();
+};
+
+export const prisma = globalForPrisma.prisma || setupPrisma();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
+// --- Auto-Seed Admin ---
 async function seedAdmin() {
   try {
     const adminExists = await prisma.admin.findFirst();
-    
     if (!adminExists) {
-      // Gerar o hash da senha (10 rounds de salt é o padrão seguro)
       const hashedPassword = await bcrypt.hash("admin123", 10);
-
       await prisma.admin.create({
         data: {
           username: "admin",
-          password: hashedPassword, 
+          password: hashedPassword,
         },
       });
-      console.log("✅ Admin criado com senha criptografada.");
+      console.log("✅ Admin verificado/criado.");
     }
   } catch (error) {
-    console.error("❌ Erro no seed do admin:", error);
+    console.error("ERRO_AO_VERIFICAR_ADMIN:", error);
+    // Silencia erros no build da Vercel
   }
 }
 
-seedAdmin();
-
-// Executa a verificação apenas uma vez na inicialização do servidor
 seedAdmin();
