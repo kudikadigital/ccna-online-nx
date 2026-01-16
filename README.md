@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎓 INEFOR - Portal de Candidaturas & Gestão Admin
 
-## Getting Started
+Este projeto é uma solução Full Stack desenvolvida para o **INEFOR**, composta por uma Landing Page de alta conversão para captura de leads (estudantes) e um Dashboard Administrativo robusto para gestão dessas candidaturas.
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🏗️ Visão Geral do Sistema
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+O sistema foi desenhado para ser leve, seguro e autogerenciável:
+1.  **Portal Público:** Onde potenciais estudantes conhecem os cursos e submetem os seus dados via formulário otimizado.
+2.  **Base de Dados:** Persistência via SQLite gerenciada pelo Prisma ORM para máxima confiabilidade.
+3.  **Área Restrita:** Dashboard protegido por autenticação criptografada para controlo total dos dados.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🚀 Stack Tecnológica
 
-To learn more about Next.js, take a look at the following resources:
+* **Framework:** [Next.js 15+](https://nextjs.org/) (App Router & Turbopack)
+* **Base de Dados:** [SQLite](https://www.sqlite.org/) (Local, sem necessidade de servidores externos complexos)
+* **ORM:** [Prisma 6+](https://www.prisma.io/)
+* **Estilização:** [Tailwind CSS](https://tailwindcss.com/)
+* **Ícones:** [Lucide React](https://lucide.dev/)
+* **Segurança:** [Bcrypt](https://www.npmjs.com/package/bcrypt) para Hashing de senhas.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛡️ Funcionalidades de Segurança
 
-## Deploy on Vercel
+Implementamos uma arquitetura de segurança multicamada:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* **Middleware de Proteção:** Verificação de integridade de sessão a nível de servidor (Edge Runtime), impedindo acessos não autorizados a rotas `/admin`.
+* **Cookies HTTP-Only:** Tokens de sessão que não podem ser acedidos via JavaScript no navegador, prevenindo ataques XSS.
+* **Server Actions:** Manipulação de dados (como eliminar leads) protegida contra ataques CSRF e com revalidação instantânea de cache.
+* **Criptografia de Dados:** Senhas administrativas nunca são guardadas em texto plano.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+---
+
+## 📂 Estrutura do Projeto
+
+```text
+├── src/
+│   ├── app/
+│   │   ├── (public)/       # Landing Page e formulário de inscrição
+│   │   ├── admin/          # Dashboard e Login administrativo
+│   │   ├── api/            # Endpoints para Auth e Integrações
+│   │   └── layout.tsx      # Root layout com AuthProvider
+│   ├── components/         # UI Components (Forms, Tabela, Sidebar)
+│   ├── context/            # AuthContext para estado global
+│   ├── lib/                # Configuração Prisma (Singleton) e Utils
+│   └── middleware.ts       # Guarda de rotas administrativas
+├── prisma/
+│   ├── schema.prisma       # Definição dos modelos Lead e Admin
+│   └── dev.db              # Base de dados SQLite
+└── README.md
