@@ -1,91 +1,143 @@
+import LogoutBtn from "@/components/ui/Logout";
 import { prisma } from "@/lib/prisma";
-import { Users, ExternalLink, Calendar } from "lucide-react";
+import { 
+  Users, 
+  LayoutDashboard, 
+  TrendingUp, 
+  Wallet,
+  ExternalLink,
+  Trash2,
+  ShieldCheck
+} from "lucide-react";
 
-export const dynamic = "force-dynamic"; // Garante que os dados sejam sempre frescos
+export const dynamic = "force-dynamic";
 
-export default async function AdminDash() {
-  const leads = await prisma.lead.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+// 1. Defina a Interface no topo
+interface CardProps {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  trend: string;
+}
+
+// 2. Defina o sub-componente Card antes do componente principal ou garanta que ele seja uma função nomeada
+function Card({ title, value, icon, trend }: CardProps) {
+  return (
+    <div className="bg-[#0d1117] border border-slate-800 p-6 rounded-[2rem] shadow-sm hover:border-blue-500/50 transition-all group">
+      <div className="flex justify-between items-start mb-4">
+        <div className="p-3 bg-[#161b22] rounded-2xl group-hover:scale-110 transition-transform">
+          {icon}
+        </div>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter bg-slate-800/50 px-2 py-1 rounded-md">
+          {trend}
+        </span>
+      </div>
+      <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{title}</p>
+      <p className="text-4xl font-black text-white tracking-tighter italic">{value}</p>
+    </div>
+  );
+}
+
+// 3. Componente Principal
+export default async function AdminDashboard() {
+  const [leads, totalVista, totalPrestacoes] = await Promise.all([
+    prisma.lead.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.lead.count({ where: { pagamento: "vista" } }),
+    prisma.lead.count({ where: { pagamento: "prestacoes" } }),
+  ]);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-black uppercase tracking-tight italic">
-            Dashboard <span className="text-blue-600">Leads</span>
-          </h1>
-          <p className="text-slate-500 font-medium">Controlo de Inscrições CCNAv7</p>
+    <div className="flex min-h-screen bg-[#0a0c10] text-slate-300">
+      <aside className="w-64 border-r border-slate-800 bg-[#0d1117] flex flex-col fixed h-full">
+        <div className="p-6">
+          <div className="flex items-center gap-3 text-white mb-8">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <ShieldCheck size={20} />
+            </div>
+            <span className="font-black tracking-tighter italic">INEFOR ADMIN</span>
+          </div>
+          <nav className="space-y-2">
+            <a href="#" className="flex items-center gap-3 px-4 py-3 bg-blue-600/10 text-blue-500 rounded-xl font-bold text-sm">
+              <LayoutDashboard size={18} /> Overview
+            </a>
+            <a href="#" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl font-bold text-sm transition-all text-slate-400">
+              <Users size={18} /> Leads
+            </a>
+          </nav>
+        </div>
+        <div className="mt-auto p-6 border-t border-slate-800">
+            <LogoutBtn />
+        </div>
+      </aside>
+
+      <main className="flex-1 ml-64 p-8">
+        <header className="flex justify-between items-end mb-10">
+          <div>
+            <p className="text-blue-500 font-black text-[10px] uppercase tracking-[0.3em] mb-1">Status em Tempo Real</p>
+            <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">
+              Dashboard <span className="text-blue-600">Overview</span>
+            </h1>
+          </div>
+          <div className="text-right">
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Live Server</p>
+            <p className="text-white font-mono text-sm">{new Date().toLocaleTimeString('pt-PT')}</p>
+          </div>
         </header>
 
-        {/* Card de Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                <Users size={24} />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Inscritos</p>
-                <p className="text-3xl font-black tracking-tighter">{leads.length}</p>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <Card title="Total Inscritos" value={leads.length} icon={<Users className="text-blue-500" />} trend="Inscrições Totais" />
+          <Card title="Pagamento à Vista" value={totalVista} icon={<TrendingUp className="text-green-500" />} trend={`${((totalVista/leads.length || 0)*100).toFixed(0)}% conversão`} />
+          <Card title="Prestações" value={totalPrestacoes} icon={<Wallet className="text-amber-500" />} trend="Parcelamentos" />
         </div>
 
-        {/* Tabela de Leads */}
-        <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+        <section className="bg-[#0d1117] border border-slate-800 rounded-[2rem] overflow-hidden">
+          <div className="p-6 border-b border-slate-800 bg-[#161b22]/30">
+            <h2 className="text-white font-black uppercase italic text-sm tracking-tight flex items-center gap-2">
+              <Users size={16} className="text-blue-500" /> Candidaturas Recentes
+            </h2>
+          </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest">
-                  <th className="px-8 py-5">Candidato</th>
-                  <th className="px-8 py-5">Pagamento</th>
-                  <th className="px-8 py-5">Data</th>
-                  <th className="px-8 py-5 text-right">Ação</th>
+                <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 border-b border-slate-800">
+                  <th className="px-8 py-4">Candidato</th>
+                  <th className="px-8 py-4">Pagamento</th>
+                  <th className="px-8 py-4">Data</th>
+                  <th className="px-8 py-4 text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-800/50">
                 {leads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-blue-50/30 transition-colors group">
+                  <tr key={lead.id} className="hover:bg-blue-600/5 transition-colors">
                     <td className="px-8 py-5">
-                      <div className="font-bold text-slate-900">{lead.nome}</div>
-                      <div className="text-xs text-slate-500 font-medium">{lead.email}</div>
+                      <p className="text-white font-bold text-sm">{lead.nome}</p>
+                      <p className="text-[10px] text-slate-500 font-mono uppercase">{lead.email}</p>
                     </td>
                     <td className="px-8 py-5">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
-                        lead.pagamento === 'vista' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
+                      <span className={`px-2 py-1 rounded text-[9px] font-black uppercase ${lead.pagamento === 'vista' ? 'text-green-500 bg-green-500/10' : 'text-blue-500 bg-blue-500/10'}`}>
                         {lead.pagamento}
                       </span>
                     </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2 text-xs text-slate-500 font-bold uppercase tracking-tight">
-                        <Calendar size={12} />
-                        {new Date(lead.createdAt).toLocaleDateString('pt-PT')}
-                      </div>
+                    <td className="px-8 py-5 text-xs text-slate-400 font-bold">
+                      {new Date(lead.createdAt).toLocaleDateString('pt-PT')}
                     </td>
                     <td className="px-8 py-5 text-right">
-                      <a 
-                        href={`https://wa.me/244${lead.whatsapp.replace(/\s/g, '')}`} 
-                        target="_blank"
-                        className="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-600 transition-all shadow-lg shadow-slate-900/10 active:scale-95"
-                      >
-                        Contactar <ExternalLink size={12} />
-                      </a>
+                      <div className="flex justify-end gap-2">
+                        <a href={`https://wa.me/${lead.whatsapp}`} target="_blank" className="p-2 bg-slate-800 rounded-lg hover:bg-green-600 text-white transition-all">
+                          <ExternalLink size={14} />
+                        </a>
+                        <button className="p-2 bg-slate-800 rounded-lg hover:bg-red-600 text-white transition-all">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {leads.length === 0 && (
-            <div className="p-20 text-center text-slate-400 font-bold uppercase tracking-widest text-sm italic">
-              Nenhum lead recebido até ao momento.
-            </div>
-          )}
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
