@@ -1,12 +1,16 @@
 import { PrismaClient } from "./generated/prisma";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcrypt";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
+const sqliteadapter = new PrismaBetterSqlite3({
+  url: "file:./prisma/dev.db",
+});
 const setupPrisma = () => {
   const url = process.env.DATABASE_URL || "file:./dev.db";
-  
+
   // LÓGICA PARA PRODUÇÃO (TURSO)
   if (url.startsWith("libsql://") || url.startsWith("wss://")) {
     const config = {
@@ -14,16 +18,16 @@ const setupPrisma = () => {
       authToken: process.env.DATABASE_AUTH_TOKEN,
     };
 
-    // No Prisma 7, se o construtor pede Config, 
+    // No Prisma 7, se o construtor pede Config,
     // instanciamos o adaptador passando o objeto de configuração diretamente.
-    const adapter = new PrismaLibSql(config); 
+    const adapter = new PrismaLibSql(config);
     return new PrismaClient({ adapter: adapter as any });
   }
 
   // LÓGICA PARA DESENVOLVIMENTO (SQLITE)
   // Nota: Para o Prisma 7, não precisamos de passar adaptador para SQLite local
   // Ele usa o motor nativo ultra-rápido.
-  return new PrismaClient();
+  return new PrismaClient({ adapter: sqliteadapter });
 };
 
 export const prisma = globalForPrisma.prisma || setupPrisma();
