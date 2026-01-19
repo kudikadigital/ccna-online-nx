@@ -21,7 +21,7 @@ export function proxy(request: NextRequest) {
   // REGRA 2: Se já estiver logado e tentar ir para o login, manda para o dashboard
   if (isLoginPage && token) {
     const url = request.nextUrl.clone();
-    url.pathname = '/admin/dash'; // ou /admin/dashboard conforme sua pasta
+    url.pathname = '/admin/dashboard'; // ou /admin/dashboard conforme sua pasta
     return NextResponse.redirect(url);
   }
 
