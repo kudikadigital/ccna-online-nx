@@ -1,35 +1,27 @@
-import { PrismaClient } from "./generated/prisma";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from "bcrypt";
 
+// 1. Definição do Singleton para evitar múltiplas instâncias em Dev
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const sqliteadapter = new PrismaBetterSqlite3({
-  url: "file:./prisma/dev.db",
-});
 const setupPrisma = () => {
-  const url = process.env.DATABASE_URL || "file:./dev.db";
+  const connectionString = process.env.DATABASE_URL;
+  
+  // Criamos o Pool do Postgres
+  const pool = new Pool({ connectionString });
+  
+  // Criamos o Adaptador exigido pelo motor "client" do Prisma 7
+  const adapter = new PrismaPg(pool);
 
-  // LÓGICA PARA PRODUÇÃO (TURSO)
-  if (url.startsWith("libsql://") || url.startsWith("wss://")) {
-    const config = {
-      url: process.env.DATABASE_URL!,
-      authToken: process.env.DATABASE_AUTH_TOKEN,
-    };
-
-    // No Prisma 7, se o construtor pede Config,
-    // instanciamos o adaptador passando o objeto de configuração diretamente.
-    const adapter = new PrismaLibSql(config);
-    return new PrismaClient({ adapter: adapter as any });
-  }
-
-  // LÓGICA PARA DESENVOLVIMENTO (SQLITE)
-  // Nota: Para o Prisma 7, não precisamos de passar adaptador para SQLite local
-  // Ele usa o motor nativo ultra-rápido.
-  return new PrismaClient({ adapter: sqliteadapter });
+  return new PrismaClient({ 
+    adapter,
+    log: process.env.NODE_ENV === "development" ? ["query", "error"] : ["error"],
+  });
 };
 
+// 2. Exportação ÚNICA da constante prisma
 export const prisma = globalForPrisma.prisma || setupPrisma();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
@@ -37,6 +29,7 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 // --- Auto-Seed Admin ---
 async function seedAdmin() {
   try {
+    // IMPORTANTE: O build do Next.js pode tentar rodar isso sem DB
     const adminExists = await prisma.admin.findFirst();
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash("admin123", 10);
@@ -46,12 +39,12 @@ async function seedAdmin() {
           password: hashedPassword,
         },
       });
-      console.log("✅ Admin verificado/criado.");
+      console.log("✅ Admin padrão verificado/criado.");
     }
-  } catch (error) {
-    console.error("ERRO_AO_VERIFICAR_ADMIN:", error);
-    // Silencia erros no build da Vercel
+  } catch (e) {
+    // Silencioso no build
   }
 }
 
+// Rodar o seed
 seedAdmin();

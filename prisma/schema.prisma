@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
+  engineType = "library"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Lead {
@@ -19,7 +16,7 @@ model Lead {
   createdAt DateTime @default(now())
 }
 
-model admin {
+model Admin { // Recomendo 'Admin' com 'A' maiúsculo (PascalCase)
   id       Int    @id @default(autoincrement())
   username String @unique
   password String
