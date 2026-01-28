@@ -114,18 +114,16 @@ export default function Hero({ onOpenModal }: HeroProps) {
         </p>
 
         {/* Botão de Ação */}
-        <div className="flex flex-col sm:flex-row items-center gap-5">
-          <button
-            onClick={onOpenModal}
-            className="group relative bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black py-6 px-12 rounded-2xl transition-all duration-300 shadow-[0_20px_50px_rgba(37,99,235,0.3)] hover:-translate-y-1 active:scale-95 text-xl uppercase tracking-tighter overflow-hidden"
-          >
-            <span className="absolute -top-3 -right-3 bg-linear-to-r from-yellow-400 to-amber-500 text-slate-900 text-[10px] px-3 py-1 rounded-lg font-black rotate-12 shadow-xl border-2 border-slate-900 uppercase">
-              OFERTA
-            </span>
-            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-            <span className="relative">QUERO GARANTIR MINHA VAGA</span>
-          </button>
-        </div>
+<button
+  onClick={onOpenModal}
+  className="group relative bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black py-6 px-12 rounded-2xl transition-all duration-300 shadow-[0_20px_50px_rgba(37,99,235,0.3)] hover:-translate-y-1 active:scale-95 text-xl uppercase tracking-tighter"
+>
+  QUERO GARANTIR MINHA VAGA
+  <span className="absolute -top-3 -right-3 bg-yellow-400 text-slate-900 text-[10px] px-3 py-1 rounded-lg font-black rotate-12 shadow-xl border-2 border-slate-900 uppercase">
+    OFERTA
+  </span>
+</button>
+
 
         {/* Features/Diferenciais */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 pt-12 border-t border-slate-700/50 w-full max-w-4xl backdrop-blur-sm bg-slate-900/20 rounded-3xl p-6">

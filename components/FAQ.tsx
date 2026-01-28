@@ -10,25 +10,41 @@ import {
 const faqs = [
   {
     question: "É 100% ONLINE?",
-    answer: "Sim, o formato é totalmente online com aulas ao vivo via Zoom. Todas as sessões são gravadas e disponibilizadas na nossa plataforma para consulta posterior, permitindo que você estude no seu próprio ritmo.",
+    answer:
+      "Sim. A formação é totalmente online, com aulas ao vivo realizadas via Zoom. Todas as aulas ficam gravadas e disponíveis na plataforma para que você possa rever sempre que precisar.",
   },
   {
-    question: "PRECISO TER EXPERIÊNCIA PRÉVIA EM REDES?",
-    answer: "Não. A formação foi desenhada para atender tanto iniciantes do zero quanto técnicos que já atuam na área mas desejam consolidar a base teórica e prática necessária para o mercado global.",
+    question: "PRECISO TER EXPERIÊNCIA PRÉVIA?",
+    answer:
+      "Não. A formação foi desenhada tanto para iniciantes que estão começando do zero quanto para técnicos que desejam fortalecer a base teórica e prática em redes.",
   },
   {
-    question: "A CERTIFICAÇÃO É OFICIAL?",
-    answer: "Sim. Ao concluir cada módulo com sucesso, você recebe o certificado oficial da CISCO NETACAD, reconhecido internacionalmente por empresas de tecnologia.",
+    question: "TEM CERTIFICAÇÃO?",
+    answer:
+      "Sim. Ao concluir cada módulo, você receberá um certificado oficial de conclusão fornecido pela CISCO Networking Academy (NetAcad).",
   },
   {
-    question: "COMO FUNCIONAM AS AULAS PRÁTICAS?",
-    answer: "Utilizamos as ferramentas oficiais da Cisco, como o Packet Tracer e GNS3. Você realizará laboratórios reais, configurando roteadores e switches em cenários que simulam o dia a dia de um engenheiro de redes.",
+    question: "VOU TER PRÁTICA MESMO SENDO ONLINE?",
+    answer:
+      "Sim. A formação inclui laboratórios práticos, simulações e exercícios guiados, utilizando ferramentas oficiais para que você desenvolva experiência real em redes.",
   },
   {
-    question: "QUAIS SÃO AS OPÇÕES DE PAGAMENTO?",
-    answer: "Oferecemos condições facilitadas: pagamento à vista com desconto (AOA 80.000) ou parcelado em até 2 prestações de AOA 42.000.",
+    question: "HÁ MATERIAL DIDÁTICO INCLUSO?",
+    answer:
+      "Sim. Todo o material didático está incluso no valor do curso, incluindo apostilas digitais, conteúdos oficiais da Cisco e acesso às ferramentas utilizadas durante as aulas.",
+  },
+  {
+    question: "QUAL É O PERFIL DOS OUTROS ALUNOS?",
+    answer:
+      "Nossos alunos são profissionais de TI, estudantes de engenharia, técnicos de redes e gestores que buscam especialização e crescimento na área de redes e infraestrutura.",
+  },
+  {
+    question: "POSSO PARCELAR O PAGAMENTO?",
+    answer:
+      "Sim. Oferecemos a opção de pagamento em até 2 parcelas, de acordo com o lote escolhido no momento da inscrição.",
   },
 ];
+
 
 export default function FAQ() {
   return (
