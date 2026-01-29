@@ -59,7 +59,8 @@ export async function POST(req: Request) {
   } catch (error: unknown) {
     console.error("❌ Erro no pagamento:", error);
 
-    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+    const errorMessage =
+      error instanceof Error ? error.message : "Erro desconhecido";
 
     return NextResponse.json(
       {

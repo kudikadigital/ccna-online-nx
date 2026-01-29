@@ -22,11 +22,11 @@ export default function LandingPage() {
       <Navbar onOpenModal={() => setIsModalOpen(true)} />
       <Hero onOpenModal={() => setIsModalOpen(true)} />
       <InfoBanner />
-      <Features />
+      <Features onOpenModal={() => setIsModalOpen(true)} />
       <BenefitsSection />
-      <SkillsSection />
+      <SkillsSection onOpenModal={() => setIsModalOpen(true)} />
       <Pricing onOpenModal={() => setIsModalOpen(true)} />
-      <InstructorsSection />
+      <InstructorsSection onOpenModal={() => setIsModalOpen(true)} />
       <FAQ />
       <CTA onOpenModal={() => setIsModalOpen(true)} />
       <Footer />
