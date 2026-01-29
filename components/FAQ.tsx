@@ -6,6 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { BadgeHelp } from "lucide-react";
 
 const faqs = [
   {
@@ -45,15 +46,17 @@ const faqs = [
   },
 ];
 
-
 export default function FAQ() {
   return (
     <section id="faq" className="py-24 bg-slate-50 px-4">
       <div className="container mx-auto max-w-3xl">
-        <div className="text-center mb-16">
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-4 block">
-            Dúvidas Comuns
-          </span>
+        <div className="text-center mb-16">          
+          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-full px-6 py-3 mb-8">
+            <BadgeHelp className="w-5 h-5 text-blue-500" />
+            <span className="text-blue-600 font-bold uppercase text-sm tracking-wider">
+              Dúvidas Comuns
+            </span>
+          </div>
           <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 uppercase tracking-tighter italic">
             FAQ<span className="text-blue-600">.</span>
           </h2>
@@ -64,8 +67,8 @@ export default function FAQ() {
 
         <Accordion type="single" collapsible className="w-full space-y-4">
           {faqs.map((faq, index) => (
-            <AccordionItem 
-              key={index} 
+            <AccordionItem
+              key={index}
               value={`item-${index}`}
               className="bg-white rounded-3xl border border-slate-200 px-6 shadow-sm overflow-hidden transition-all data-[state=open]:border-blue-200 data-[state=open]:ring-4 data-[state=open]:ring-blue-50"
             >

@@ -226,7 +226,7 @@ export default function SkillsSection() {
                 <div className="mt-6 text-center">
                   <div className="inline-flex items-center gap-2 text-slate-400 text-sm">
                     <Globe className="w-4 h-4" />
-                    <span>Vagas limitadas para turma de Março</span>
+                    <span>Vagas limitadas para turma de Fevereiro</span>
                   </div>
                 </div>
               </div>

@@ -59,7 +59,7 @@ export default function Pricing({ onOpenModal }: PricingProps) {
           </h2>
           
           <p className="text-xl text-slate-400 max-w-3xl mx-auto font-medium leading-relaxed">
-            Transforme AOA 80.000 em uma carreira que pode render milhões. O melhor investimento da sua vida profissional.
+            Transforme 80.000 AOA em uma carreira que pode render milhões. O melhor investimento da sua vida profissional.
           </p>
         </div>
 

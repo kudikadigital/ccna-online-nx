@@ -94,7 +94,6 @@ export default function BenefitsSection() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
               impulsionar a sua carreira
             </span>
-            :
           </h2>
 
           <p className="text-lg text-slate-400 max-w-2xl mx-auto">
