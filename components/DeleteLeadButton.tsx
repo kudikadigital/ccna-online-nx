@@ -1,35 +1,51 @@
+// components/DeleteLeadButton.tsx
 "use client";
-import { deleteLead } from "@/app/admin/dashboard/actions";
-import { Trash2, Loader2 } from "lucide-react";
-import { useState } from "react";
 
-export function DeleteLeadButton({ id }: { id: string }) {
-  const [isDeleting, setIsDeleting] = useState(false);
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+interface DeleteLeadButtonProps {
+  id: string;
+}
+
+export function DeleteLeadButton({ id }: DeleteLeadButtonProps) {
+  const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm("Tem certeza que deseja eliminar este lead?")) return;
+    if (!confirm("Tem certeza que deseja excluir este lead?")) return;
 
-    setIsDeleting(true);
+    setLoading(true);
+    
     try {
-      const result = await deleteLead(id);
-      if (!result.success) alert(result.error);
-    } catch (err) {
-      alert("Erro ao conectar com o servidor.");
-      console.error(err);
+      const response = await fetch(`/api/leads/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        toast.success("Lead excluído com sucesso!");
+        // Recarregar a página após exclusão
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        throw new Error("Falha ao excluir lead");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir lead");
+      console.error(error);
     } finally {
-      setIsDeleting(false);
+      setLoading(false);
     }
   };
 
   return (
     <button
       onClick={handleDelete}
-      disabled={isDeleting}
-      className="p-2 bg-slate-800 rounded-lg hover:bg-red-600 text-white transition-all disabled:opacity-50"
-      title="Eliminar Lead"
+      disabled={loading}
+      className="p-2 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg border border-red-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      title="Excluir lead"
     >
-      {isDeleting ? (
-        <Loader2 size={14} className="animate-spin" />
+      {loading ? (
+        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
       ) : (
         <Trash2 size={14} />
       )}
