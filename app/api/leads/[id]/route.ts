@@ -1,24 +1,24 @@
 // app/api/leads/[id]/route.ts
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const id = parseInt(params.id);
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
-      );
-    }
+  const { id } = await context.params;
+  const leadId = Number(id);
 
-    // Verificar se o lead existe
+  if (Number.isNaN(leadId)) {
+    return NextResponse.json(
+      { error: "ID inválido" },
+      { status: 400 }
+    );
+  }
+
+  try {
     const lead = await prisma.lead.findUnique({
-      where: { id },
+      where: { id: leadId },
     });
 
     if (!lead) {
@@ -28,9 +28,8 @@ export async function DELETE(
       );
     }
 
-    // Excluir o lead
     await prisma.lead.delete({
-      where: { id },
+      where: { id: leadId },
     });
 
     return NextResponse.json(
@@ -40,8 +39,9 @@ export async function DELETE(
   } catch (error: unknown) {
     console.error("Erro ao excluir lead:", error);
 
-    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-    
+    const errorMessage =
+      error instanceof Error ? error.message : "Erro desconhecido";
+
     return NextResponse.json(
       {
         error: "Erro ao excluir lead",
