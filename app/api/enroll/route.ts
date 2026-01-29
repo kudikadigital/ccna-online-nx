@@ -4,16 +4,20 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { nome, whatsapp, email, pagamento } = body;
 
     const newLead = await prisma.lead.create({
       data: {
-        nome,
-        whatsapp,
-        email,
-        pagamento,
+        nome: body.nome,
+        email: body.email,
+        whatsapp: body.whatsapp,
+        experiencia: body.experiencia,
+        objetivo: body.objetivo,
+        profissao: body.profissao,
+        empresa: body.empresa,
+        cargo: body.cargo,
+        status: "lead",
       },
-    });
+    })
 
     return NextResponse.json(newLead, { status: 201 });
   } catch (error) {
