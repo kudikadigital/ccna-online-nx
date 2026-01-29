@@ -37,7 +37,7 @@ export default function InstructorsSection() {
   ];
 
   return (
-    <section className="relative py-32 bg-gradient-to-b from-white to-slate-50 overflow-hidden">
+    <section id="instructors" className="relative py-32 bg-gradient-to-b from-white to-slate-50 overflow-hidden">
       {/* Elementos decorativos */}
       <div className="absolute inset-0 z-0">
         {/* Gradientes sutis */}

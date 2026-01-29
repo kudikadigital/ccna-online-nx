@@ -59,7 +59,7 @@ export default function BenefitsSection() {
   ];
 
   return (
-    <section className="relative bg-gradient-to-b from-slate-900 to-slate-950 text-white py-24 px-4 overflow-hidden">
+    <section id="benefits" className="relative bg-gradient-to-b from-slate-900 to-slate-950 text-white py-24 px-4 overflow-hidden">
       {/* Efeito de Background */}
       <div className="absolute inset-0 z-0">
         {/* Gradientes sutis */}

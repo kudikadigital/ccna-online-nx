@@ -42,7 +42,7 @@ export default function SkillsSection() {
   ];
 
   return (
-    <section className="relative py-32 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
+    <section id="skills" className="relative py-32 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
       {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 z-0">
         {/* Luzes azuis */}

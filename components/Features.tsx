@@ -39,7 +39,7 @@ export default function TargetAudience() {
   ];
 
   return (
-    <section className="relative py-32 bg-gradient-to-b from-white to-slate-50 overflow-hidden">
+    <section id="features" className="relative py-32 bg-gradient-to-b from-white to-slate-50 overflow-hidden">
       {/* Elementos de fundo decorativos */}
       <div className="absolute inset-0 z-0">
         {/* Gradientes sutis */}

@@ -6,7 +6,7 @@ interface HeroProps {
 
 export default function Hero({ onOpenModal }: HeroProps) {
   return (
-    <section className="relative bg-slate-900 text-white pt-32 pb-20 px-4 flex items-center overflow-hidden min-h-[80vh]">
+    <section id="/" className="relative bg-slate-900 text-white pt-32 pb-20 px-4 flex items-center overflow-hidden min-h-[80vh]">
       {/* Imagem de Fundo Moderna com Gradiente Escuro */}
       <div
         className="absolute inset-0 z-0 opacity-30 pointer-events-none"

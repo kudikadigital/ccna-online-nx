@@ -21,7 +21,7 @@ export default function Pricing({ onOpenModal }: PricingProps) {
   ];
 
   return (
-    <section id="investimento" className="relative py-32 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
+    <section id="pricing" className="relative py-32 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
       {/* Elementos de fundo */}
       <div className="absolute inset-0 z-0">
         {/* Luzes coloridas */}
