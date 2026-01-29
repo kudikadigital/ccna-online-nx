@@ -21,7 +21,7 @@ export default function Navbar({ onOpenModal }: NavbarProps) {
             I
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-white font-black text-xl tracking-tighter uppercase italic">
+            <span className="text-white font-black text-xl tracking-tighter uppercase">
               INEFOR<span className="text-blue-500">.</span>
             </span>
             <span className="text-blue-500 font-bold text-[9px] tracking-[0.2em] uppercase">

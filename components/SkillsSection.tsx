@@ -208,7 +208,7 @@ export default function SkillsSection() {
                   </div>
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-400" />
-                    <span className="text-slate-300">Acesso Vitalício</span>
+                    <span className="text-slate-300">Networking profissional</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-400" />

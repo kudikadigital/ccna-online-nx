@@ -57,7 +57,7 @@ export default function FAQ() {
               Dúvidas Comuns
             </span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 uppercase tracking-tighter italic">
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 uppercase tracking-tighter">
             FAQ<span className="text-blue-600">.</span>
           </h2>
           <p className="text-slate-500 font-medium">
