@@ -10,6 +10,7 @@ export async function POST(req: Request) {
         nome: body.nome,
         email: body.email,
         whatsapp: body.whatsapp,
+        plano: body.plano, // ✅ OBRIGATÓRIO
         experiencia: body.experiencia,
         objetivo: body.objetivo,
         profissao: body.profissao,
