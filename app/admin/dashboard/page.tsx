@@ -16,6 +16,10 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
+  FileText,
+  FileLock,
+  EyeClosed,
+  EyeClosedIcon
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +48,7 @@ interface Lead {
   status: string;
   paymentId: string | null;
   paymentStatus: string | null;
+  comprovativoUrl: string | null; // ← Campo para o comprovativo
   createdAt: Date;
   updatedAt: Date;
 }
@@ -77,11 +82,11 @@ function Card({ title, value, icon, trend, description }: CardProps) {
 export default async function AdminDashboard() {
   // Buscar dados com os campos CORRETOS
   const [leads, stats] = await Promise.all([
-    prisma.lead.findMany({ 
+    prisma.lead.findMany({
       orderBy: { createdAt: "desc" },
-      take: 50 // Limitar para performance
+      take: 50, // Limitar para performance
     }) as Promise<Lead[]>,
-    
+
     // Estatísticas em uma única query
     prisma.lead.aggregate({
       _count: {
@@ -95,23 +100,38 @@ export default async function AdminDashboard() {
 
   // Calcular estatísticas manualmente (mais flexível)
   const totalLeads = leads.length;
-  const totalVista = leads.filter((lead: Lead) => lead.plano === "vista").length;
-  const totalParcelado = leads.filter((lead: Lead) => lead.plano === "parcelado").length;
-  const totalPendente = leads.filter((lead: Lead) => lead.plano === "pendente").length;
-  const totalConfirmados = leads.filter((lead: Lead) => lead.status === "confirmado").length;
-  const totalPendentesPagamento = leads.filter((lead: Lead) => lead.status === "lead").length;
+  const totalVista = leads.filter(
+    (lead: Lead) => lead.plano === "vista",
+  ).length;
+  const totalParcelado = leads.filter(
+    (lead: Lead) => lead.plano === "parcelado",
+  ).length;
+  const totalPendente = leads.filter(
+    (lead: Lead) => lead.plano === "pendente",
+  ).length;
+  const totalConfirmados = leads.filter(
+    (lead: Lead) => lead.status === "confirmado",
+  ).length;
+  const totalPendentesPagamento = leads.filter(
+    (lead: Lead) => lead.status === "lead",
+  ).length;
 
   // Agrupar por perfil
-  const perfis = leads.reduce((acc: Record<string, number>, lead: Lead) => {
-    const perfil = lead.perfil || "não informado";
-    acc[perfil] = (acc[perfil] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const perfis = leads.reduce(
+    (acc: Record<string, number>, lead: Lead) => {
+      const perfil = lead.perfil || "não informado";
+      acc[perfil] = (acc[perfil] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   // Perfil mais comum
-  const perfilMaisComumEntry = (Object.entries(perfis) as [string, number][]).sort((a, b) => b[1] - a[1])[0];
+  const perfilMaisComumEntry = (
+    Object.entries(perfis) as [string, number][]
+  ).sort((a, b) => b[1] - a[1])[0];
   const perfilMaisComum: [string, number] = Array.isArray(perfilMaisComumEntry)
-    ? perfilMaisComumEntry as [string, number]
+    ? (perfilMaisComumEntry as [string, number])
     : ["nenhum", 0];
 
   return (
@@ -190,7 +210,7 @@ export default async function AdminDashboard() {
             trend="Todos os Leads"
             description={`${totalConfirmados} confirmados`}
           />
-          
+
           <Card
             title="À Vista"
             value={totalVista}
@@ -198,7 +218,7 @@ export default async function AdminDashboard() {
             trend={`${((totalVista / totalLeads || 0) * 100).toFixed(0)}% dos inscritos`}
             description="20% de desconto"
           />
-          
+
           <Card
             title="Parcelado"
             value={totalParcelado}
@@ -206,7 +226,7 @@ export default async function AdminDashboard() {
             trend="2 parcelas"
             description="Mais escolhido"
           />
-          
+
           <Card
             title="Pendentes"
             value={totalPendente}
@@ -225,7 +245,7 @@ export default async function AdminDashboard() {
             trend="Pagamento processado"
             description="Inscrição garantida"
           />
-          
+
           <Card
             title="Pend. Pagamento"
             value={totalPendentesPagamento}
@@ -233,7 +253,7 @@ export default async function AdminDashboard() {
             trend="Aguardando pagamento"
             description="Step 2 pendente"
           />
-          
+
           <Card
             title="Perfil Mais Comum"
             value={perfilMaisComum[1]}
@@ -247,7 +267,8 @@ export default async function AdminDashboard() {
         <section className="bg-[#0d1117] border border-slate-800 rounded-[2rem] overflow-hidden mb-10">
           <div className="p-6 border-b border-slate-800 bg-[#161b22]/30 flex justify-between items-center">
             <h2 className="text-white font-black uppercase italic text-sm tracking-tight flex items-center gap-2">
-              <Users size={16} className="text-blue-500" /> Candidaturas Recentes
+              <Users size={16} className="text-blue-500" /> Candidaturas
+              Recentes
               <span className="text-slate-500 text-xs font-normal ml-2">
                 ({leads.length} total)
               </span>
@@ -264,7 +285,7 @@ export default async function AdminDashboard() {
               </button>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -283,7 +304,9 @@ export default async function AdminDashboard() {
                   <tr>
                     <td colSpan={7} className="px-8 py-12 text-center">
                       <Users className="h-12 w-12 text-slate-700 mx-auto mb-4" />
-                      <p className="text-slate-500">Nenhuma inscrição encontrada</p>
+                      <p className="text-slate-500">
+                        Nenhuma inscrição encontrada
+                      </p>
                       <p className="text-slate-600 text-sm mt-2">
                         As inscrições aparecerão aqui automaticamente
                       </p>
@@ -303,7 +326,6 @@ export default async function AdminDashboard() {
                           {lead.email}
                         </p>
                       </td>
-                      
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
                           <Phone size={12} className="text-slate-500" />
@@ -312,54 +334,53 @@ export default async function AdminDashboard() {
                           </span>
                         </div>
                       </td>
-                      
                       <td className="px-8 py-5">
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-900/30 text-blue-400">
                           {lead.perfil || "Não informado"}
                         </span>
                       </td>
-                      
                       <td className="px-8 py-5">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                            lead.plano === "vista" 
-                              ? "text-green-500 bg-green-500/10" 
+                            lead.plano === "vista"
+                              ? "text-green-500 bg-green-500/10"
                               : lead.plano === "parcelado"
-                              ? "text-blue-500 bg-blue-500/10"
-                              : "text-yellow-500 bg-yellow-500/10"
+                                ? "text-blue-500 bg-blue-500/10"
+                                : "text-yellow-500 bg-yellow-500/10"
                           }`}
                         >
-                          {lead.plano === "vista" ? "À Vista" : 
-                           lead.plano === "parcelado" ? "Parcelado" : 
-                           "Pendente"}
+                          {lead.plano === "vista"
+                            ? "À Vista"
+                            : lead.plano === "parcelado"
+                              ? "Parcelado"
+                              : "Pendente"}
                         </span>
                       </td>
-                      
                       <td className="px-8 py-5">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            lead.status === "confirmado" 
-                              ? "text-green-500 bg-green-500/10" 
+                            lead.status === "confirmado"
+                              ? "text-green-500 bg-green-500/10"
                               : "text-yellow-500 bg-yellow-500/10"
                           }`}
                         >
                           {lead.status === "confirmado" ? "Confirmado" : "Lead"}
                         </span>
                       </td>
-                      
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
                           <Calendar size={12} className="text-slate-500" />
                           <span className="text-xs text-slate-400 font-bold">
-                            {new Date(lead.createdAt).toLocaleDateString("pt-PT")}
+                            {new Date(lead.createdAt).toLocaleDateString(
+                              "pt-PT",
+                            )}
                           </span>
                         </div>
                       </td>
-                      
                       <td className="px-8 py-5 text-right">
                         <div className="flex justify-end gap-2">
                           <a
-                            href={`https://wa.me/${lead.whatsapp.replace(/\D/g, '')}`}
+                            href={`https://wa.me/${lead.whatsapp.replace(/\D/g, "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white rounded-lg border border-green-600/30 transition-all"
@@ -377,18 +398,37 @@ export default async function AdminDashboard() {
                           <DeleteLeadButton id={String(lead.id)} />
                         </div>
                       </td>
+                      {/* // No dashboard, adicione na tabela: */}
+                      <td className="px-8 py-5">
+                        {lead.comprovativoUrl ? (
+                          <a
+                            href={lead.comprovativoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1 bg-green-900/30 text-green-400 hover:bg-green-900/50 rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
+                          >
+                            <FileText size={12} />
+                            Ver Comprovativo
+                          </a>
+                        ) : (
+                          <span className="text-slate-500 text-xs">
+                            <EyeClosedIcon size={12} className="inline mr-1" />
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
-          
+
           {/* Paginação/Footer da tabela */}
           {leads.length > 0 && (
             <div className="p-4 border-t border-slate-800 bg-[#161b22]/30 flex justify-between items-center">
               <p className="text-slate-500 text-xs">
-                Mostrando {Math.min(leads.length, 50)} de {totalLeads} inscrições
+                Mostrando {Math.min(leads.length, 50)} de {totalLeads}{" "}
+                inscrições
               </p>
               <div className="flex gap-2">
                 <button className="text-xs px-3 py-1 bg-slate-800 text-slate-400 rounded-lg border border-slate-700 hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
@@ -401,7 +441,6 @@ export default async function AdminDashboard() {
             </div>
           )}
         </section>
-
       </main>
     </div>
   );

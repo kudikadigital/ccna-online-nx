@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   X,
   ShieldCheck,
@@ -14,6 +14,12 @@ import {
   Rocket,
   Star,
   TrendingUp,
+  Upload,
+  FileText,
+  Copy,
+  Check,
+  Banknote,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,6 +34,11 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
   const [leadId, setLeadId] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
@@ -38,7 +49,7 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
-    console.log("Dados enviados:", data);
+    console.log("📥 Body recebido:", data);
 
     try {
       const response = await fetch("/api/leads", {
@@ -78,6 +89,65 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
     }
   };
 
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+
+    // Validar tamanho do arquivo (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Arquivo muito grande", {
+        description: "O comprovativo deve ter no máximo 5MB",
+      });
+      return;
+    }
+
+    // Validar tipo de arquivo
+    const validTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Formato inválido", {
+        description: "Apenas JPG, PNG ou PDF são aceitos",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    // Simular upload progressivo
+    const interval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 100);
+
+    try {
+      // Aqui você faria o upload real para um servidor (Cloudinary, AWS S3, etc.)
+      // Por enquanto, apenas simulamos
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      clearInterval(interval);
+      setUploadProgress(100);
+      setUploadedFile(file);
+      
+      toast.success("Comprovativo carregado!", {
+        description: "Arquivo pronto para envio.",
+      });
+
+      // Reset progress after success
+      setTimeout(() => setUploadProgress(0), 1000);
+    } catch (error) {
+      clearInterval(interval);
+      toast.error("Erro no upload", {
+        description: "Não foi possível carregar o arquivo",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleStep2Submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -85,30 +155,83 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
+    // Validar se um plano foi selecionado
+    if (!data.plano) {
+      toast.error("Selecione um plano", {
+        description: "Escolha entre pagamento à vista ou parcelado",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch("/api/payment", {
+      // Primeiro processar o pagamento
+      const paymentResponse = await fetch("/api/payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           leadId,
           plano: data.plano,
+          comprovativoEnviado: !!uploadedFile,
         }),
       });
 
-      if (response.ok) {
-        toast.success("Pagamento processado!", {
-          description: "Sua inscrição está confirmada.",
-        });
-        setStep(3);
-      } else {
-        throw new Error("Falha no pagamento");
+      if (!paymentResponse.ok) {
+        throw new Error("Falha no processamento do pagamento");
       }
+
+      // Se houver arquivo, fazer upload separadamente
+      if (uploadedFile && leadId) {
+        const uploadFormData = new FormData();
+        uploadFormData.append("comprovativo", uploadedFile);
+        uploadFormData.append("leadId", leadId);
+        uploadFormData.append("plano", data.plano as string);
+
+        try {
+          const uploadResponse = await fetch("/api/upload-comprovativo", {
+            method: "POST",
+            body: uploadFormData,
+          });
+
+          if (!uploadResponse.ok) {
+            console.warn("Upload do comprovativo falhou, mas pagamento foi processado");
+          }
+        } catch (uploadError) {
+          console.warn("Erro no upload do comprovativo:", uploadError);
+          // Não falha o processo principal
+        }
+      }
+
+      toast.success("Inscrição confirmada!", {
+        description: uploadedFile 
+          ? "Pagamento processado e comprovativo recebido!" 
+          : "Pagamento processado com sucesso!",
+      });
+      
+      setStep(3);
     } catch (error) {
+      console.error("Erro:", error);
       toast.error("Erro no pagamento", {
         description: "Verifique os dados e tente novamente.",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string, fieldName: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      toast.success("Copiado!", {
+        description: `${fieldName} copiado para a área de transferência`,
+      });
+      
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      toast.error("Erro ao copiar", {
+        description: "Não foi possível copiar o texto",
+      });
     }
   };
 
@@ -432,7 +555,7 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
             </div>
           ) : (
             <>
-              Continuar
+              Continuar para Pagamento
               <ShieldCheck className="h-5 w-5 group-hover:scale-110 transition-transform" />
             </>
           )}
@@ -455,167 +578,366 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
         </div>
         <div>
           <h4 className="font-black uppercase text-blue-500 tracking-widest text-lg mb-1">
-            Plano de Investimento
+            Pagamento e Comprovativo
           </h4>
           <p className="text-slate-400 text-sm">
-            Escolha a melhor forma de pagamento para você
+            Escolha seu plano e envie o comprovativo de pagamento
           </p>
         </div>
       </div>
 
-      {/* Cards de Planos */}
+      {/* Grid de 2 colunas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Plano Parcelado */}
-        <label className="relative cursor-pointer">
-          <input
-            type="radio"
-            name="plano"
-            value="parcelado"
-            className="hidden peer"
-            defaultChecked
-          />
-          <div className="p-8 bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-800 rounded-3xl peer-checked:border-blue-500 peer-checked:shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all h-full">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                    <svg
-                      className="h-5 w-5 text-blue-500"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z" />
-                    </svg>
+        {/* Coluna 1: Seleção de Plano */}
+        <div className="space-y-6">
+          <h5 className="font-bold text-white mb-4 flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-blue-500" />
+            Escolha seu Plano de Pagamento
+          </h5>
+
+          <div className="space-y-4">
+            {/* Plano Parcelado */}
+            <label className="relative cursor-pointer block">
+              <input
+                type="radio"
+                name="plano"
+                value="parcelado"
+                className="hidden peer"
+                defaultChecked
+              />
+              <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-800 rounded-2xl peer-checked:border-blue-500 peer-checked:shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z" />
+                        </svg>
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-widest text-blue-500">
+                        MAIS ESCOLHIDO
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-black text-white">2 PARCELAS</h3>
                   </div>
-                  <span className="text-sm font-black uppercase tracking-widest text-blue-500">
-                    MAIS ESCOLHIDO
-                  </span>
                 </div>
-                <h3 className="text-2xl font-black text-white">2 PARCELAS</h3>
-                <p className="text-slate-400 text-sm mt-1">
-                  Custo-benefício ideal
-                </p>
-              </div>
-            </div>
 
-            <div className="mb-8">
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-white">
-                  42.000
-                </span>
-                <span className="text-xl font-bold text-white">AOA</span>
-              </div>
-              <p className="text-slate-400 text-sm mt-2">
-                por mês (total: 84.000 AOA)
-              </p>
-            </div>
+                <div className="mb-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-white">42.000</span>
+                    <span className="text-lg font-bold text-white">AOA</span>
+                  </div>
+                  <p className="text-slate-400 text-sm mt-1">
+                    por mês • Total: 84.000 AOA
+                  </p>
+                </div>
 
+                <ul className="space-y-2">
+                  <li className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-500/20 rounded flex items-center justify-center">
+                      <svg className="h-2 w-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-slate-300">Sem juros</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-500/20 rounded flex items-center justify-center">
+                      <svg className="h-2 w-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-slate-300">Melhor opção para estudantes</span>
+                  </li>
+                </ul>
+              </div>
+            </label>
+
+            {/* Plano à Vista */}
+            <label className="relative cursor-pointer block">
+              <input
+                type="radio"
+                name="plano"
+                value="vista"
+                className="hidden peer"
+              />
+              <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-800 rounded-2xl peer-checked:border-green-500 peer-checked:shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <ShieldCheck className="h-4 w-4 text-green-500" />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-widest text-green-500">
+                        ECONOMIZE 20%
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-black text-white">À VISTA</h3>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-white">80.000</span>
+                    <span className="text-lg font-bold text-white">AOA</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-slate-400 text-sm line-through">
+                      105.000 AOA
+                    </span>
+                    <span className="text-green-400 text-xs font-bold bg-green-500/10 px-2 py-0.5 rounded">
+                      Economize 25.000 AOA
+                    </span>
+                  </div>
+                </div>
+
+                <ul className="space-y-2">
+                  <li className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-500/20 rounded flex items-center justify-center">
+                      <svg className="h-2 w-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-slate-300">20% de desconto</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-500/20 rounded flex items-center justify-center">
+                      <svg className="h-2 w-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-slate-300">Menor custo total</span>
+                  </li>
+                </ul>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Coluna 2: Comprovativo e Referência Bancária */}
+        <div className="space-y-6">
+          {/* Seção de Referência Bancária */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6">
+            <h5 className="font-bold text-white mb-4 flex items-center gap-2">
+              <Banknote className="h-5 w-5 text-blue-500" />
+              Dados Bancários para Pagamento
+            </h5>
+            
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="h-3 w-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                  </svg>
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-2">
+                  Banco
+                </label>
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                  <span className="text-white font-medium">Banco BAI</span>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard("Banco BAI", "Banco")}
+                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    {copiedField === "Banco" ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-slate-400" />
+                    )}
+                  </button>
                 </div>
-                <span className="text-sm text-slate-300">Sem juros</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="h-3 w-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                  </svg>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-2">
+                  Conta
+                </label>
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                  <span className="text-white font-mono">9848701410001</span>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard("9848701410001", "Conta")}
+                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    {copiedField === "Conta" ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-slate-400" />
+                    )}
+                  </button>
                 </div>
-                <span className="text-sm text-slate-300">Flexibilidade financeira</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="h-3 w-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                  </svg>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-2">
+                  IBAN
+                </label>
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                  <span className="text-white font-mono">AO06 0040 0000 9848 7014 1014 9</span>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard("AO06004000009848701410149", "IBAN")}
+                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    {copiedField === "IBAN" ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-slate-400" />
+                    )}
+                  </button>
                 </div>
-                <span className="text-sm text-slate-300">Melhor opção para estudantes</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-2">
+                  Titular
+                </label>
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                  <span className="text-white">INEFOR PRESTAÇÃO DE SERVIÇOS Lda</span>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard("INEFOR PRESTAÇÃO DE SERVIÇOS Lda", "Titular")}
+                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    {copiedField === "Titular" ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-slate-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-blue-900/20 border border-blue-800 rounded-xl">
+                <p className="text-sm text-blue-300 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span className="font-semibold">Instruções importantes:</span>
+                </p>
+                <ul className="text-xs text-slate-300 space-y-1 mt-2 ml-6 list-disc">
+                  <li>Use seu nome como referência do pagamento</li>
+                  <li>Envie o comprovativo após realizar o pagamento</li>
+                  <li>O processamento pode levar até 24 horas</li>
+                  <li>Mantenha o comprovativo para referência</li>
+                </ul>
               </div>
             </div>
           </div>
-        </label>
 
-        {/* Plano à Vista */}
-        <label className="relative cursor-pointer">
-          <input
-            type="radio"
-            name="plano"
-            value="vista"
-            className="hidden peer"
-          />
-          <div className="p-8 bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-800 rounded-3xl peer-checked:border-green-500 peer-checked:shadow-[0_0_40px_rgba(34,197,94,0.3)] transition-all h-full">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <ShieldCheck className="h-5 w-5 text-green-500" />
-                  </div>
-                  <span className="text-sm font-black uppercase tracking-widest text-green-500">
-                    ECONOMIZE 20%
-                  </span>
-                </div>
-                <h3 className="text-2xl font-black text-white">À VISTA</h3>
-                <p className="text-slate-400 text-sm mt-1">
-                  Pagamento único com desconto
-                </p>
-              </div>
-            </div>
-
-            <div className="mb-8">
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-white">80.000</span>
-                <span className="text-xl font-bold text-white">AOA</span>
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-slate-400 text-sm line-through">
-                  105.000 AOA
-                </span>
-                <span className="text-green-400 text-sm font-bold">
-                  Economize 25.000 AOA
-                </span>
-              </div>
-            </div>
+          {/* Seção de Upload de Comprovativo */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6">
+            <h5 className="font-bold text-white mb-4 flex items-center gap-2">
+              <Upload className="h-5 w-5 text-blue-500" />
+              Envie seu Comprovativo
+            </h5>
 
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="h-3 w-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                  </svg>
+              <div className="text-center">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                  accept=".jpg,.jpeg,.png,.pdf"
+                  className="hidden"
+                />
+                
+                {!uploadedFile ? (
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-slate-700 rounded-2xl p-8 cursor-pointer hover:border-blue-500 transition-colors"
+                  >
+                    <div className="w-16 h-16 bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Upload className="h-8 w-8 text-blue-500" />
+                    </div>
+                    <p className="text-white font-medium mb-2">
+                      Clique para fazer upload
+                    </p>
+                    <p className="text-slate-400 text-sm">
+                      Formatos aceitos: JPG, PNG, PDF (máx. 5MB)
+                    </p>
+                  </div>
+                ) : (
+                  <div className="border-2 border-green-500/30 border-dashed rounded-2xl p-6 bg-green-900/10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{uploadedFile.name}</p>
+                          <p className="text-slate-400 text-sm">
+                            {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB • {uploadedFile.type}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setUploadedFile(null)}
+                        className="p-2 hover:bg-red-500/20 rounded-lg text-red-400 hover:text-red-300 transition-colors"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                    
+                    {isUploading && (
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs text-slate-400 mb-1">
+                          <span>Carregando...</span>
+                          <span>{uploadProgress}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-2">
+                          <div 
+                            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!isUploading && uploadProgress === 100 && (
+                      <div className="flex items-center gap-2 text-green-400 text-sm mt-2">
+                        <Check className="h-4 w-4" />
+                        <span>Comprovativo pronto para envio</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center justify-center gap-2 mx-auto"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {uploadedFile ? "Trocar arquivo" : "Selecionar arquivo"}
+                  </button>
                 </div>
-                <span className="text-sm text-slate-300">20% de desconto</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="h-3 w-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-sm text-slate-300">Acesso imediato ao curso</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="h-3 w-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-sm text-slate-300">Menor custo total</span>
+
+              <div className="mt-4 p-4 bg-slate-800/30 rounded-xl">
+                <p className="text-sm text-slate-300 mb-2">
+                  <span className="font-semibold text-white">Por que enviar o comprovativo?</span>
+                </p>
+                <ul className="text-xs text-slate-400 space-y-1">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>Acelera o processamento da sua inscrição</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>Garante a confirmação imediata da sua vaga</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>Evita atrasos na liberação do acesso</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
-        </label>
+        </div>
       </div>
 
-      {/* Inclusos */}
+      {/* Inclusos no Valor */}
       <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
         <h5 className="font-bold text-white mb-4 flex items-center gap-2">
-          <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <ShieldCheck className="h-5 w-5 text-blue-500" />
           O que está incluso no valor:
         </h5>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -652,12 +974,12 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Voltar
+          Voltar aos Dados
         </button>
         <button
           type="submit"
-          disabled={loading}
-          className="flex-1 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-green-600/20 transition-all uppercase tracking-tighter text-lg"
+          disabled={loading || isUploading}
+          className="flex-1 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-green-600/20 transition-all uppercase tracking-tighter text-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <div className="flex items-center justify-center gap-2">
@@ -666,10 +988,24 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
               <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.2s]"></div>
             </div>
           ) : (
-            "Confirmar Pagamento"
+            `Finalizar Inscrição ${uploadedFile ? "✓" : ""}`
           )}
         </button>
       </div>
+
+      {/* Nota sobre o comprovativo */}
+      {!uploadedFile && (
+        <div className="p-4 bg-yellow-900/20 border border-yellow-800 rounded-xl">
+          <p className="text-sm text-yellow-300 flex items-center gap-2">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <span>
+              <strong>Você pode finalizar sem comprovativo agora</strong>, mas envie-o o quanto antes para acelerar a confirmação.
+            </span>
+          </p>
+        </div>
+      )}
     </form>
   );
 
@@ -681,10 +1017,12 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
           <ShieldCheck className="h-10 w-10" />
         </div>
         <h4 className="font-black uppercase text-green-500 tracking-widest text-xl mb-2">
-          Inscrição Confirmada!
+          {uploadedFile ? "Inscrição Completa!" : "Inscrição Confirmada!"}
         </h4>
         <p className="text-slate-400">
-          Parabéns, sua vaga no CCNAv7 Online está garantida
+          {uploadedFile 
+            ? "Pagamento processado e comprovativo recebido!"
+            : "Pagamento processado com sucesso!"}
         </p>
       </div>
 
@@ -694,8 +1032,9 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
           Bem-vindo ao CCNAv7 Online!
         </h3>
         <p className="text-slate-300 mb-6">
-          Em breve nossa equipe entrará em contato via WhatsApp com todos os
-          detalhes de acesso.
+          {uploadedFile 
+            ? "Sua inscrição está completa! Em breve entraremos em contato via WhatsApp."
+            : "Sua inscrição foi registrada! Envie o comprovativo para completar o processo."}
         </p>
 
         <div className="bg-slate-800/30 rounded-2xl p-6">
@@ -704,28 +1043,34 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
             {[
               {
                 step: "01",
-                title: "Contato via WhatsApp",
-                desc: "Receberá o link do grupo da turma",
+                title: uploadedFile ? "Contato via WhatsApp" : "Envie o comprovativo",
+                desc: uploadedFile 
+                  ? "Receberá o link do grupo da turma" 
+                  : "Envie para +244 923 456 789",
+                color: "bg-blue-500/20 text-blue-500",
               },
               {
                 step: "02",
                 title: "Acesso à NETACAD",
                 desc: "Credenciais liberadas em até 24h",
+                color: "bg-green-500/20 text-green-500",
               },
               {
                 step: "03",
                 title: "Material didático",
                 desc: "Disponível na primeira aula",
+                color: "bg-purple-500/20 text-purple-500",
               },
               {
                 step: "04",
                 title: "Início das aulas",
                 desc: "09/02/2026 às 19:00",
+                color: "bg-amber-500/20 text-amber-500",
               },
             ].map((item, index) => (
               <div key={index} className="flex items-start gap-4 p-4 bg-slate-900/50 rounded-xl">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <span className="font-bold text-blue-500">{item.step}</span>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${item.color}`}>
+                  <span className="font-bold">{item.step}</span>
                 </div>
                 <div>
                   <p className="font-semibold text-white">{item.title}</p>
@@ -735,9 +1080,20 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
             ))}
           </div>
         </div>
+
+        {!uploadedFile && (
+          <div className="mt-6 p-4 bg-blue-900/20 border border-blue-800 rounded-xl">
+            <p className="text-sm text-blue-300 mb-2">
+              <strong>Lembre-se de enviar seu comprovativo!</strong>
+            </p>
+            <p className="text-slate-400 text-sm">
+              Para: +244 923 456 789 • Referência: seu nome
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Informações Adicionais */}
+      {/* Informações de Contato */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-slate-900/50 p-6 rounded-2xl">
           <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -748,7 +1104,7 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
           </div>
           <h6 className="font-bold text-white mb-2">Dúvidas?</h6>
           <p className="text-slate-400 text-sm">
-            Entre em contato: +244 923 456 789
+            WhatsApp: +244 923 456 789
           </p>
         </div>
 
@@ -810,7 +1166,7 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
                 <Zap className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                 <span className="text-xs font-black uppercase tracking-widest">
                   {step === 1 && "Pré-inscrição"}
-                  {step === 2 && "Seleção de Plano"}
+                  {step === 2 && "Pagamento e Comprovativo"}
                   {step === 3 && "Confirmação"}
                 </span>
               </div>
@@ -819,13 +1175,13 @@ export default function EnrollModal({ isOpen, onClose }: EnrollModalProps) {
               </h3>
               <p className="text-blue-200 text-lg">
                 {step === 1 && "Garanta sua vaga na próxima turma"}
-                {step === 2 && "Escolha a melhor forma de investir na sua carreira"}
+                {step === 2 && "Complete seu pagamento"}
                 {step === 3 && "Você está oficialmente inscrito!"}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="text-white/60 hover:text-white hover:bg-black/30 p-3 rounded-xl transition-all backdrop-blur-sm"
+              className="text-white/60 hover:text-white hover:bg-black/30 p-3 rounded-xl backdrop-blur-sm"
             >
               <X className="h-7 w-7" />
             </button>

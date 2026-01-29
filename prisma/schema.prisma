@@ -20,7 +20,9 @@ model Lead {
   cargo            String?  // novo
   status           String   @default("lead") // lead, pendente_pagamento, confirmado
   paymentId        String?  // para referência do pagamento
-  paymentStatus    String?  // status do pagamento
+  paymentStatus    String?      // "pending", "approved", "comprovativo_enviado"
+  comprovativoUrl  String?      // URL do comprovativo no storage
+  comprovativoName String?      // Nome do arquivo do comprovativo
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
