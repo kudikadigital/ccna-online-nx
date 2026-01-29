@@ -1,32 +1,32 @@
-import { prisma } from "@/lib/prisma";
-import { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server"
 
-// const prisma = new PrismaClient();
+export async function POST(req: Request) {
+  try {
+    const body = await req.json()
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (req.method === "POST") {
-    try {
-      // Aqui você integraria com um gateway de pagamento (Mercado Pago, Stripe, etc.)
-      const paymentId = `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const paymentId = `pay_${Date.now()}_${Math.random()
+      .toString(36)
+      .slice(2, 11)}`
 
-      const lead = await prisma.lead.update({
-        where: { id: parseInt(req.body.leadId) },
-        data: {
-          plano: req.body.plano,
-          status: "confirmado",
-          paymentId: paymentId,
-          paymentStatus: "approved",
-        },
-      });
+    const lead = await prisma.lead.update({
+      where: { id: body.leadId }, // ⚠️ se for UUID, NÃO use parseInt
+      data: {
+        plano: body.plano,
+        status: "confirmado",
+        paymentId,
+        paymentStatus: "approved",
+      },
+    })
 
-      // Enviar notificação WhatsApp (integração com Twilio, etc.)
-
-      return res.status(200).json({ success: true, lead });
-    } catch (error) {
-      return res.status(500).json({ error: "Erro ao processar pagamento" });
-    }
+    return NextResponse.json(
+      { success: true, lead },
+      { status: 200 }
+    )
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Erro ao processar pagamento" },
+      { status: 500 }
+    )
   }
 }

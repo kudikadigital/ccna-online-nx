@@ -1,28 +1,32 @@
-import { prisma } from "@/lib/prisma";
-import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server"
 
-// const prisma = new PrismaClient()
+export async function POST(req: Request) {
+  try {
+    const body = await req.json()
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    try {
-      const lead = await prisma.lead.create({
-        data: {
-          nome: req.body.nome,
-          email: req.body.email,
-          whatsapp: req.body.whatsapp,
-          experiencia: req.body.experiencia,
-          objetivo: req.body.objetivo,
-          profissao: req.body.profissao,
-          empresa: req.body.empresa,
-          cargo: req.body.cargo,
-          status: 'lead',
-        }
-      })
-      
-      return res.status(200).json({ leadId: lead.id })
-    } catch (error) {
-      return res.status(500).json({ error: 'Erro ao criar lead' })
-    }
+    const lead = await prisma.lead.create({
+      data: {
+        nome: body.nome,
+        email: body.email,
+        whatsapp: body.whatsapp,
+        experiencia: body.experiencia,
+        objetivo: body.objetivo,
+        profissao: body.profissao,
+        empresa: body.empresa,
+        cargo: body.cargo,
+        status: "lead",
+      },
+    })
+
+    return NextResponse.json(
+      { leadId: lead.id },
+      { status: 201 }
+    )
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Erro ao criar lead" },
+      { status: 500 }
+    )
   }
 }
