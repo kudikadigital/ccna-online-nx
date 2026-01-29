@@ -37,13 +37,16 @@ export async function DELETE(
       { message: "Lead excluído com sucesso" },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erro ao excluir lead:", error);
+
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
     
     return NextResponse.json(
       {
         error: "Erro ao excluir lead",
-        details: error.message,
+        details: errorMessage,
+        suggestion: "Tente novamente mais tarde ou contate o suporte",
       },
       { status: 500 }
     );

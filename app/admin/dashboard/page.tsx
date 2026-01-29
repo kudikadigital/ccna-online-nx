@@ -95,21 +95,24 @@ export default async function AdminDashboard() {
 
   // Calcular estatísticas manualmente (mais flexível)
   const totalLeads = leads.length;
-  const totalVista = leads.filter(lead => lead.plano === "vista").length;
-  const totalParcelado = leads.filter(lead => lead.plano === "parcelado").length;
-  const totalPendente = leads.filter(lead => lead.plano === "pendente").length;
-  const totalConfirmados = leads.filter(lead => lead.status === "confirmado").length;
-  const totalPendentesPagamento = leads.filter(lead => lead.status === "lead").length;
+  const totalVista = leads.filter((lead: Lead) => lead.plano === "vista").length;
+  const totalParcelado = leads.filter((lead: Lead) => lead.plano === "parcelado").length;
+  const totalPendente = leads.filter((lead: Lead) => lead.plano === "pendente").length;
+  const totalConfirmados = leads.filter((lead: Lead) => lead.status === "confirmado").length;
+  const totalPendentesPagamento = leads.filter((lead: Lead) => lead.status === "lead").length;
 
   // Agrupar por perfil
-  const perfis = leads.reduce((acc, lead) => {
+  const perfis = leads.reduce((acc: Record<string, number>, lead: Lead) => {
     const perfil = lead.perfil || "não informado";
     acc[perfil] = (acc[perfil] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   // Perfil mais comum
-  const perfilMaisComum = Object.entries(perfis).sort((a, b) => b[1] - a[1])[0] || ["nenhum", 0];
+  const perfilMaisComumEntry = (Object.entries(perfis) as [string, number][]).sort((a, b) => b[1] - a[1])[0];
+  const perfilMaisComum: [string, number] = Array.isArray(perfilMaisComumEntry)
+    ? perfilMaisComumEntry as [string, number]
+    : ["nenhum", 0];
 
   return (
     <div className="flex min-h-screen bg-[#0a0c10] text-slate-300">
@@ -287,7 +290,7 @@ export default async function AdminDashboard() {
                     </td>
                   </tr>
                 ) : (
-                  leads.map((lead) => (
+                  leads.map((lead: Lead) => (
                     <tr
                       key={lead.id}
                       className="hover:bg-blue-600/5 transition-colors"
@@ -399,35 +402,6 @@ export default async function AdminDashboard() {
           )}
         </section>
 
-        {/* Resumo por Perfil */}
-        <section className="bg-[#0d1117] border border-slate-800 rounded-[2rem] p-6">
-          <h3 className="text-white font-black uppercase italic text-sm tracking-tight mb-6 flex items-center gap-2">
-            <User size={16} className="text-purple-500" /> Distribuição por Perfil
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.entries(perfis).map(([perfil, count]) => (
-              <div key={perfil} className="bg-[#161b22] p-4 rounded-xl border border-slate-800">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-slate-300 font-semibold capitalize">
-                    {perfil}
-                  </span>
-                  <span className="text-lg font-black text-white">
-                    {count}
-                  </span>
-                </div>
-                <div className="w-full bg-slate-800 rounded-full h-2">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full"
-                    style={{ width: `${(count / totalLeads) * 100}%` }}
-                  ></div>
-                </div>
-                <p className="text-slate-500 text-xs mt-2">
-                  {((count / totalLeads) * 100).toFixed(1)}% do total
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
     </div>
   );
