@@ -1,14 +1,9 @@
 // app/admin/dashboard/page.tsx
 import { DeleteLeadButton } from "@/components/DeleteLeadButton";
-import LogoutBtn from "@/components/ui/Logout";
 import { prisma } from "@/lib/prisma";
 import {
   Users,
-  LayoutDashboard,
-  TrendingUp,
   Wallet,
-  ExternalLink,
-  ShieldCheck,
   User,
   Mail,
   Phone,
@@ -17,8 +12,6 @@ import {
   Clock,
   DollarSign,
   FileText,
-  FileLock,
-  EyeClosed,
   EyeClosedIcon
 } from "lucide-react";
 
@@ -136,47 +129,7 @@ export default async function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-[#0a0c10] text-slate-300">
-      <aside className="w-64 border-r border-slate-800 bg-[#0d1117] flex flex-col fixed h-full">
-        <div className="p-6">
-          <div className="flex items-center gap-3 text-white mb-8">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <ShieldCheck size={20} />
-            </div>
-            <span className="font-black tracking-tighter italic">
-              INEFOR ADMIN
-            </span>
-          </div>
-          <nav className="space-y-2">
-            <a
-              href="/admin/dashboard"
-              className="flex items-center gap-3 px-4 py-3 bg-blue-600/10 text-blue-500 rounded-xl font-bold text-sm"
-            >
-              <LayoutDashboard size={18} /> Dashboard
-            </a>
-            <a
-              href="/admin/leads"
-              className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl font-bold text-sm transition-all text-slate-400"
-            >
-              <Users size={18} /> Todos os Leads
-            </a>
-            <a
-              href="/admin/inscritos"
-              className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl font-bold text-sm transition-all text-slate-400"
-            >
-              <CheckCircle size={18} /> Inscritos Confirmados
-            </a>
-            <a
-              href="/admin/pagamentos"
-              className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 rounded-xl font-bold text-sm transition-all text-slate-400"
-            >
-              <DollarSign size={18} /> Pagamentos
-            </a>
-          </nav>
-        </div>
-        <div className="mt-auto p-6 border-t border-slate-800">
-          <LogoutBtn />
-        </div>
-      </aside>
+      
 
       <main className="flex-1 ml-64 p-8">
         <header className="flex justify-between items-end mb-10">
