@@ -80,9 +80,9 @@ export default function Hero({ onOpenModal }: HeroProps) {
       </div>
 
       {/* Zonas escuras para contraste */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-900/90 via-transparent to-slate-900/80 pointer-events-none"></div>
-      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-slate-900 to-transparent pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none"></div>
+      <div className="absolute inset-0 z-0 bg-linear-to-br from-slate-900/90 via-transparent to-slate-900/80 pointer-events-none"></div>
+      <div className="absolute top-0 left-0 w-full h-32 bg-linear-to-b from-slate-900 to-transparent pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-linear-to-t from-slate-900 to-transparent pointer-events-none"></div>
 
       <div className="container mx-auto max-w-6xl relative z-10 flex flex-col items-center text-center">
         {/* Badge de Urgência */}
@@ -97,7 +97,7 @@ export default function Hero({ onOpenModal }: HeroProps) {
         {/* Título Principal */}
         <h1 className="text-5xl md:text-8xl font-black mb-8 leading-[0.9] tracking-tighter uppercase">
           CCNA ONLINE <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600 animate-gradient">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-cyan-400 to-blue-600 animate-gradient">
             3 MÓDULOS
           </span>
         </h1>
