@@ -14,7 +14,7 @@ O sistema foi desenhado para ser leve, seguro e autogerenciável:
 ---
 
 ## 🚀 Stack Tecnológica
-
+ 
 * **Framework:** [Next.js 15+](https://nextjs.org/) (App Router & Turbopack)
 * **Base de Dados:** [SQLite](https://www.sqlite.org/) (Local, sem necessidade de servidores externos complexos)
 * **ORM:** [Prisma 6+](https://www.prisma.io/)
