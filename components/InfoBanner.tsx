@@ -17,7 +17,7 @@ export default function InfoBanner() {
                   Início
                 </span>
                 <span className="text-white font-bold text-sm md:text-base whitespace-nowrap">
-                  16 de Março, 2026
+                  15 de Junho, 2026
                 </span>
               </div>
             </div>
