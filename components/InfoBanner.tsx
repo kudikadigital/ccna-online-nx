@@ -41,20 +41,26 @@ export default function InfoBanner() {
 
             <div className="hidden md:block w-px h-10 bg-blue-400/30"></div>
 
-            {/* Item: Horário */}
-            <div className="flex items-center gap-4 group">
-              <div className="p-2.5 bg-white/10 rounded-xl group-hover:bg-white/20 transition-all duration-300">
-                <Clock className="h-5 w-5 text-blue-100" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-blue-200 text-[10px] uppercase font-black tracking-[0.2em] mb-0.5">
-                  Horário
-                </span>
-                <span className="text-white font-bold text-sm md:text-base whitespace-nowrap">
-                  19:00 - 21:00
-                </span>
-              </div>
-            </div>
+{/* Item: Horário + Dias */}
+<div className="flex items-center gap-4 group">
+  <div className="p-2.5 bg-white/10 rounded-xl group-hover:bg-white/20 transition-all duration-300">
+    <Clock className="h-5 w-5 text-blue-100" />
+  </div>
+
+  <div className="flex flex-col">
+    <span className="text-blue-200 text-[10px] uppercase font-black tracking-[0.2em] mb-0.5">
+      Horário
+    </span>
+
+    <span className="text-white font-bold text-sm md:text-base whitespace-nowrap">
+      19:00 - 21:00
+    </span>
+
+    <span className="text-blue-100 text-xs mt-1">
+      Segunda a Quinta
+    </span>
+  </div>
+</div>
 
             <div className="hidden md:block w-px h-10 bg-blue-400/30"></div>
 
