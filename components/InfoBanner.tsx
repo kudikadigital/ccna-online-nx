@@ -58,7 +58,7 @@ export default function InfoBanner() {
                   Duração
                 </span>
                 <span className="text-white font-bold text-sm md:text-base whitespace-nowrap">
-                  3 Meses Intensivos
+                  2 Meses Intensivos
                 </span>
               </div>
             </div>
