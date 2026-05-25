@@ -12,7 +12,7 @@ const faqs = [
   {
     question: "É 100% ONLINE?",
     answer:
-      "Sim. A formação é totalmente online, com aulas ao vivo realizadas via Zoom. Todas as aulas ficam gravadas e disponíveis na plataforma para que você possa rever sempre que precisar.",
+      "Sim. A formação é totalmente online, com aulas ao vivo realizadas via Zoom.",
   },
   {
     question: "PRECISO TER EXPERIÊNCIA PRÉVIA?",
