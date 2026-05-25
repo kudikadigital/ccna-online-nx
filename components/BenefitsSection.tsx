@@ -22,7 +22,7 @@ export default function BenefitsSection() {
     },
     {
       icon: PlayCircle,
-      title: "Aulas ao vivo + gravação",
+      title: "Aulas ao vivo",
       description: "Assista ao vivo e reveja as aulas quando quiser",
       color: "from-green-500 to-emerald-400",
     },
