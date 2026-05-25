@@ -134,7 +134,7 @@ export default function Hero({ onOpenModal }: HeroProps) {
               </span>
             </div>
             <p className="text-slate-300 text-sm font-bold uppercase tracking-tight">
-              Ao vivo + gravações
+              Ao vivo
             </p>
           </div>
 
